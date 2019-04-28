@@ -1,0 +1,112 @@
+---
+layout: default
+title: Home
+---
+
+<div class="posts">
+  {% for post in paginator.posts %}
+  <div class="post">
+    <h1 class="post-title">
+      <a href="{{ site.baseurl }}/{{ post.url }}">
+        {{post.title}}
+      </a>
+    </h1>
+
+    <span class="post-date">{{ post.date | date_to_string }}</span>
+
+    {{post.content}}
+    
+    <div>
+    <h3><strong><em>Comments</em></strong></h3>
+    <div>
+      Want to leave a comment? Write your comment
+      <a href="https://github.com/reudismam/reudismam.github.io/issues/{{post.commentIssueId}}">here</a>.
+    </div>
+    <div id="comments"></div>
+  </div>
+
+  <script type="text/javascript">
+   var commentIssueId = {{ post.commentIssueId }};
+   /* console.log(commentIssueId);*/
+   function formatComment(user, userUrl, avatar, date, commentUrl, body) {
+     /* header */
+     var commentHeaderAvatar = document.createElement("span");
+     commentHeaderAvatar.innerHTML = "<img src='" + avatar +
+                                     "' width='20' height='20'>";
+     var usr = document.createElement("strong"); /* user */
+     usr.innerHTML = user;
+     var commentHeaderUser = document.createElement("a"); /* user div */
+     commentHeaderUser.className = "comment-header-user";
+     commentHeaderUser.href = userUrl;
+     commentHeaderUser.appendChild(usr);
+     var dat = document.createElement("a"); /* date */
+     dat.href = commentUrl;
+     dat.innerHTML = date;
+     var commentHeaderDate = document.createElement("span"); /* date div */
+     commentHeaderDate.appendChild(dat);
+     var commentHeader = document.createElement("div");
+     commentHeader.className = "comment-header";
+     commentHeader.appendChild(commentHeaderAvatar);
+     commentHeader.appendChild(commentHeaderUser);
+     commentHeader.appendChild(commentHeaderDate);
+     /* body */
+     var commentBody = document.createElement("div");
+     commentBody.className = "comment-body";
+     commentBody.innerHTML = body;
+     /* comment (header + body) */
+     var comment = document.createElement("div");
+     comment.className = "comment";
+     comment.appendChild(commentHeader);
+     comment.appendChild(commentBody);
+     return comment;
+   }
+   if (commentIssueId) {
+     console.log("loading comments...");
+     var url = "https://api.github.com/repos/reudismam/reudismam.github.io/issues/" +
+               commentIssueId + "/comments";
+     var request = new XMLHttpRequest();
+     request.onload = function() {
+       var response = JSON.parse(request.responseText);
+       /* console.log(response);*/
+       var comments = document.getElementById("comments");
+       for ( var i = 0; i < response.length; i++) {
+         var user = response[i].user.login;
+         var userUrl = response[i].user.html_url;
+         var avatar = response[i].user.avatar_url;
+         var date = new Date(response[i].updated_at).toDateString();
+         var commentUrl = response[i].html_url;
+         var body = response[i].body_html;
+         comments.appendChild(formatComment(user, userUrl, avatar,
+                                            date, commentUrl, body));
+       }
+     };
+     request.error = function() {
+       console.log("error loading comments");
+     };
+     request.open('GET', url, true);
+     request.setRequestHeader("Accept", "application/vnd.github.v3.html+json");
+     request.send();
+   }
+  </script>
+    
+  </div>
+  {% endfor %}
+</div>
+
+<div class="pagination">
+  {% if paginator.next_page %}
+    <a class="pagination-item older" href="{{ site.baseurl }}/page{{paginator.next_page}}">Older</a>
+  {% else %}
+    <span class="pagination-item older">Older</span>
+  {% endif %}
+  {% if paginator.previous_page %}
+    {% if paginator.page == 2 %}
+      <a class="pagination-item newer" href="{{ site.baseurl }}/">Newer</a>
+    {% else %}
+      <a class="pagination-item newer" href="{{ site.baseurl }}/page{{paginator.previous_page}}">Newer</a>
+    {% endif %}
+  {% else %}
+    <span class="pagination-item newer">Newer</span>
+  {% endif %}
+</div>
+
